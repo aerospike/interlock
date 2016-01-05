@@ -53,6 +53,9 @@ func cmdStart(c *cli.Context) {
 
 	config := &interlock.Config{}
 	config.SwarmUrl = swarmURL
+	config.TLSCaCert = swarmTLSCaCert 
+	config.TLSCert = swarmTLSCert
+	config.TLSKey = swarmTLSKey
 	config.EnabledPlugins = c.GlobalStringSlice("plugin")
 
 	// load tlsconfig

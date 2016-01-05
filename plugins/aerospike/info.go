@@ -1,14 +1,14 @@
-package stats
+package aerospike
 
 import (
 	"github.com/ehazlett/interlock"
 )
 
 const (
-	pluginName        = "stats"
+	pluginName        = "aerospike"
 	pluginVersion     = "0.1"
-	pluginDescription = "cluster stats to graphite"
-	pluginUrl         = "https://github.com/ehazlett/interlock/tree/master/plugins/stats"
+	pluginDescription = "AeroSpike plugin"
+	pluginUrl         = "https://github.com/rguo-aerospike/interlock/tree/master/plugins/aerospike"
 )
 
 var (

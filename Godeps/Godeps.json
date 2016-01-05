@@ -58,7 +58,7 @@
 		},
 		{
 			"ImportPath": "github.com/samalba/dockerclient",
-			"Rev": "a4ab21dcb3ca827643afd738de71d40300ab05f5"
+			"Rev": "0cba4a962c5a4dfcc4a83b8e64a946837a6ed913"
 		},
 		{
 			"ImportPath": "github.com/stretchr/objx",
