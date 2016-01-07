@@ -88,7 +88,7 @@ func (p AerospikePlugin) HandleEvent(event *dockerclient.Event) error {
     return nil
 }
 
-func contains(events []dockerclient.Container, event *dockerclient.Event) bool {
+func (p AerospikePlugin) contains(events []dockerclient.Container, event *dockerclient.Event) bool {
 	for _,a := range events {
 		if a.Id == event.Id{
 			return true
@@ -167,7 +167,7 @@ func (p AerospikePlugin) clusterAerospike(event *dockerclient.Event) error {
     if err != nil  {
         return err
     }
-    if ! contains(containers, event) {
+    if ! p.contains(containers, event) {
     	plugins.Log(pluginInfo.Name, log.InfoLevel, fmt.Sprintf("CONTAINER not part of Aerospike Cluster"))
     	return nil
     }
