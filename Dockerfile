@@ -1,20 +1,4 @@
-FROM debian:jessie
-RUN echo deb http://httpredir.debian.org/debian jessie-backports main | \
-      tee /etc/apt/sources.list.d/backports.list \
-    && echo deb http://haproxy.debian.net jessie-backports-1.6 main | \
-      tee /etc/apt/sources.list.d/haproxy.list
-ENV DEBIAN_FRONTEND noninteractive
-
-RUN apt-get update -y \
-      && apt-get install -y \
-      debian-keyring python wget logrotate ca-certificates 
-
-RUN gpg --keyring /usr/share/keyrings/debian-keyring.gpg \
-      --export bernat@debian.org | \
-         apt-key add -
-
-RUN apt-get update \
-    && apt-get install -y haproxy -t jessie-backports-1.6 nginx-full
+FROM ehazlett/interlock
 
 ENV AEROSPIKE_VERSION 3.7.0
 ENV AEROSPIKE_SHA256 e3f38d3f090fdaf0d9b4bffe5f89156c60d06359d47ad7639d1a689b98fab059
@@ -23,6 +7,9 @@ ENV AEROSPIKE_SHA256 e3f38d3f090fdaf0d9b4bffe5f89156c60d06359d47ad7639d1a689b98f
 WORKDIR /aerospike
 
 ENV PATH /aerospike:$PATH
+
+RUN apt-get update \
+    && apt-get install -y ca-certificates logrotate wget python 
 
 RUN \
     wget "https://www.aerospike.com/artifacts/aerospike-tools/${AEROSPIKE_VERSION}/aerospike-tools-${AEROSPIKE_VERSION}-debian7.tgz" -O aerospike-tools.tgz \
@@ -39,3 +26,5 @@ ADD https://get.docker.com/builds/Linux/x86_64/docker-1.9.1 /usr/local/bin/docke
 RUN chmod +x /usr/local/bin/docker
 EXPOSE 80 443
 ENTRYPOINT ["/usr/local/bin/interlock"]
+
+
