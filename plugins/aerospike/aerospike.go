@@ -6,7 +6,6 @@ import (
     "os"
     "strings"
     "os/exec"
-    "encoding/json"
 	log "github.com/Sirupsen/logrus"
 	"github.com/ehazlett/interlock"
 	"github.com/ehazlett/interlock/plugins"
@@ -72,13 +71,7 @@ func (p AerospikePlugin) Info() *interlock.PluginInfo {
 }
 
 func (p AerospikePlugin) HandleEvent(event *dockerclient.Event) error {
-/*	plugins.Log(pluginInfo.Name, log.InfoLevel,
-		fmt.Sprintf("action=received event=%s time=%d",
-			event.Id,
-			event.Time,
-		),
-	)
-*/
+
     switch event.Status {
     case "start":
         if err := p.clusterAerospike(event); err != nil{
@@ -88,34 +81,14 @@ func (p AerospikePlugin) HandleEvent(event *dockerclient.Event) error {
     return nil
 }
 
-func (p AerospikePlugin) contains(events []dockerclient.Container, event *dockerclient.Event) bool {
-	for _,a := range events {
-		if a.Id == event.Id{
+func (p AerospikePlugin) contains(containers []string, event *dockerclient.Event) bool {
+	for _,a := range containers {
+		if a == event.Id[:12]{
 			return true
 		}
 	}
 	return false
 }
-/*
-func findIP(b []byte, myNetwork string) (ip string ,err error) {
-	var result []map[string]interface{}
-    err = json.Unmarshal(b,&result); 
-    networkSettings := result[0]["NetworkSettings"]
-    plugins.Log(pluginInfo.Name, log.DebugLevel, fmt.Sprintf("JSON OUTPUT %+v",networkSettings))
-    mapNetworkSettings := networkSettings.(map[string]interface{})
-    plugins.Log(pluginInfo.Name, log.DebugLevel, fmt.Sprintf("JSON2 MAP %+v",mapNetworkSettings["Networks"]))
-    mapDocker := mapNetworkSettings["Networks"].(map[string]interface{})
-    if mapDocker[myNetwork] == nil{
-    	err = errors.New("Network not found: "+myNetwork)
-    	return
-    }
-    plugins.Log(pluginInfo.Name, log.DebugLevel, fmt.Sprintf("DOCKER MAP %+v",mapDocker[myNetwork]))
-    mapDockerIP := mapDocker[myNetwork].(map[string]interface{})
-    ip = mapDockerIP["IPAddress"].(string)
-    plugins.Log(pluginInfo.Name, log.InfoLevel, fmt.Sprintf("DOCKER IP %+v",ip))
-    return 
-}
-*/
 func (p AerospikePlugin) runDocker(command string, args ...string) (output []byte, err error){
 	docker, err := exec.LookPath("docker")
     if err != nil {
@@ -158,44 +131,29 @@ func (p AerospikePlugin) clusterAerospike(event *dockerclient.Event) error {
     // scan all running containers
     plugins.Log(pluginInfo.Name, log.InfoLevel,fmt.Sprintf("status= %s",event.Status))
 
-    filter := "com.aerospike.cluster="+p.pluginConfig.ClusterName
-    filterMap := map[string][]string{ "label":[]string{filter} }
-    mapF, _ := json.Marshal(filterMap)
-    plugins.Log(pluginInfo.Name, log.DebugLevel, fmt.Sprintf("FILTER= %s", string(mapF)))
-    containers, err := p.client.ListContainers(false,false,string(mapF)) //filter based on aerospike on 3rd param
-	
+    filter := "label=com.aerospike.cluster="+p.pluginConfig.ClusterName
+    args := []string{"-q","--filter",filter}
+    filterOut, err := p.runDocker("ps",args...)
+
     if err != nil  {
+        log.Errorf("error running docker: %s",err)
         return err
     }
+    containers := strings.Split(string(filterOut),"\n")
     if ! p.contains(containers, event) {
     	plugins.Log(pluginInfo.Name, log.InfoLevel, fmt.Sprintf("CONTAINER not part of Aerospike Cluster"))
     	return nil
     }
     plugins.Log(pluginInfo.Name, log.DebugLevel, fmt.Sprintf("Containers= %s", containers))
 
- //   network,_ := p.client.InspectNetwork(p.pluginConfig.NetworkName)
 
-    filter = "label="+filter
-    args := []string{"-q","--filter",filter}
-   	filterOut, err := p.runDocker("ps",args...)
-   	if err != nil {
-	    log.Errorf("error running docker: %s",err)
-	    return err
-	}  
-	temp := strings.Split(string(filterOut),"\n")
-
-//    newNode,_ := p.client.InspectContainer(event.Id)
-    // for each container 
- //   for _, cnt := range containers {
-//    	plugins.Log(pluginInfo.Name, log.DebugLevel,fmt.Sprintf("ContainerID=%v EventID=%v",cnt.Id, event.Id))
-	for _,cnt := range temp {
+	for _,cnt := range containers {
 		plugins.Log(pluginInfo.Name, log.DebugLevel,fmt.Sprintf("ContainerID=%v EventID=%v",cnt, event.Id[:12]))
 	
- //       if cnt.Id == event.Id {
+
     	if cnt == event.Id[:12] || cnt == ""{
             continue
         }
-//    	cInfo,_ := p.client.InspectContainer(cnt.Id[:12]) // missing network info
     	cInfo,_ := p.client.InspectContainer(cnt) // missing network info
 
 	    inspectArgs := []string{
@@ -209,13 +167,7 @@ func (p AerospikePlugin) clusterAerospike(event *dockerclient.Event) error {
 	        return err
 	    }  
 	    plugins.Log(pluginInfo.Name, log.DebugLevel, fmt.Sprintf("DOCKER OUTPUT %+v",string(cmdOut)))
-/*
-	    ip2, err := findIP(cmdOut,p.pluginConfig.NetworkName)
-	    if err != nil {
-	        log.Errorf("error running docker: %s",err)
-	        return err
-	    } 
-*/
+
 	    // strip trailing newline
 	    ip := string(cmdOut)
 	    ipLen := len(ip)-1
