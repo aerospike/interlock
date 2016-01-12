@@ -8,10 +8,9 @@ import (
 
 // AuthConfig hold parameters for authenticating with the docker registry
 type AuthConfig struct {
-	Username      string `json:"username,omitempty"`
-	Password      string `json:"password,omitempty"`
-	Email         string `json:"email,omitempty"`
-	RegistryToken string `json:"registrytoken,omitempty"`
+	Username string `json:"username,omitempty"`
+	Password string `json:"password,omitempty"`
+	Email    string `json:"email,omitempty"`
 }
 
 // encode the auth configuration struct into base64 for the X-Registry-Auth header
