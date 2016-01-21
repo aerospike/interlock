@@ -6,9 +6,9 @@ import (
 
 const (
 	pluginName        = "aerospike"
-	pluginVersion     = "0.1"
-	pluginDescription = "AeroSpike plugin"
-	pluginUrl         = "https://github.com/rguo-aerospike/interlock/tree/master/plugins/aerospike"
+	pluginVersion     = "0.2"
+	pluginDescription = "Aerospike plugin"
+	pluginUrl         = "https://github.com/aerospike/interlock/tree/master/plugins/aerospike"
 )
 
 var (

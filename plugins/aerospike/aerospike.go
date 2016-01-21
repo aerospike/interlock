@@ -151,38 +151,49 @@ func (p AerospikePlugin) clusterAerospike(eventId string) error {
     	if cnt == eventId || cnt == ""{
             continue
         }
-    	cInfo,_ := p.client.InspectContainer(cnt) // missing network info
+    	//cInfo,_ := p.client.InspectContainer(cnt) // missing network info
 
-	    inspectArgs := []string{
+	    inspectTargetArgs := []string{
 	    	"-f",
 	    	"{{.NetworkSettings.Networks."+p.pluginConfig.NetworkName+".IPAddress}}",
 	    	eventId,
 	    }
-	    cmdOut, err := p.runDocker("inspect",inspectArgs...)
+        inspectHostArgs := []string{
+            "-f",
+            "{{.NetworkSettings.Networks."+p.pluginConfig.NetworkName+".IPAddress}}",
+            cnt,
+        }
+	    targetOut, err := p.runDocker("inspect",inspectTargetArgs...)
 	    if err != nil {
 	        log.Errorf("error running docker: %s",err)
 	        return err
-	    }  
-	    plugins.Log(pluginInfo.Name, log.DebugLevel, fmt.Sprintf("DOCKER OUTPUT %+v",string(cmdOut)))
+	    } 
+        hostOut, err := p.runDocker("inspect",inspectHostArgs...)
+        if err != nil {
+            log.Errorf("error running docker: %s",err)
+            return err
+        }   
+
+        plugins.Log(pluginInfo.Name, log.DebugLevel, fmt.Sprintf("DOCKER TARGET OUTPUT %+v",string(targetOut)))
+	    plugins.Log(pluginInfo.Name, log.DebugLevel, fmt.Sprintf("DOCKER HOST OUTPUT %+v",string(hostOut)))
 
 	    // strip trailing newline
-	    ip := string(cmdOut)
-	    ipLen := len(ip)-1
-	    if ipLen > 0 {
-	    	ip = ip[:ipLen]
-	    }
-	    if len(cInfo.Name) > 0{
+	    targetIP := string(targetOut)
+	    targetIP = strings.TrimSpace(targetIP)
+        hostIP := string(hostOut)
+        hostIP = strings.TrimSpace(hostIP)
+	    //if len(cInfo.Name) > 0{
 		    infoArgs := []string{
 		    	"-h",
-		    	cInfo.Name[1:],    //strip leading / from cInfo.Name
+		    	hostIP,    
 		    	"-v",
-		    	"tip:host="+ip[:ipLen]+";port="+p.pluginConfig.MeshPort, 
+		    	"tip:host="+targetIP+";port="+p.pluginConfig.MeshPort, 
 		    }
 			plugins.Log(pluginInfo.Name, log.InfoLevel, fmt.Sprintf("ARGS  %+v",infoArgs))	
 			p.runAsinfoTip(infoArgs...)
-		}else{
-			log.Errorf("Container name not found")
-		}
+		//}else{
+		//	log.Errorf("Container name not found")
+		//}
     }
 	return nil
 }
