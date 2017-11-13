@@ -16,4 +16,4 @@ The following configuration is available through environment variables:
 # Machine
 If you used Machine to create your Swarm, you can use this command to start Interlock:
 
-    docker run -d --net prod -e AEROSPIKE_NETWORK_NAME=prod  --rm  -v /var/lib/boot2docker:/etc/docker  rguo/nterlock --swarm-url=$DOCKER_HOST --swarm-tls-ca-cert=/etc/docker/ca.pem --swarm-tls-cert=/etc/docker/server.pem --swarm-tls-key=/etc/docker/server-key.pem --debug -p aerospike start
+    docker run -d --net prod -e AEROSPIKE_NETWORK_NAME=prod  --rm  -v /var/lib/boot2docker:/etc/docker  aerospike/interlock --swarm-url=$DOCKER_HOST --swarm-tls-ca-cert=/etc/docker/ca.pem --swarm-tls-cert=/etc/docker/server.pem --swarm-tls-key=/etc/docker/server-key.pem --debug -p aerospike start
